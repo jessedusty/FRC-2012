@@ -15,7 +15,6 @@ import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Watchdog;
 import edu.wpi.first.wpilibj.Victor;
-import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.Relay;
 /**
  * This "BuiltinDefaultCode" provides the "default code" functionality as used in the "Benchtop Test."
@@ -249,13 +248,15 @@ public class FRC_UserProgram extends IterativeRobot {
               leftserve.set(Relay.Value.kOff);
            }
            
-           if (m_leftStick.getY() == 1) { 
-               rightserve.set(Relay.Value.kReverse);
-               rightserve.set(Relay.Value.kOn);
-           } else if (m_leftStick.getY() == -1) {
-                rightserve.set(Relay.Value.kForward);
-               rightserve.set(Relay.Value.kOn);
-           } else if (m_leftStick.getY() == 0) {
+           
+           if (m_leftStick.getRawButton(3)) { 
+               
+               rightserve.set(Relay.Value.kForward);
+              
+           } else if (m_leftStick.getRawButton(2)) {
+                rightserve.set(Relay.Value.kReverse);
+             
+           } else if (m_leftStick.getRawButton(6)) {
               rightserve.set(Relay.Value.kOff);
            }
            
