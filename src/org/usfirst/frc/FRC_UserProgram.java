@@ -151,7 +151,9 @@ public class FRC_UserProgram extends IterativeRobot {
 	public void robotInit() {
 		// Actions which would be performed once (and only once) upon initialization of the
 		// robot would be put here.
-
+                TESTNYA = new Victor(5);
+                leftserve = new Relay(6);
+                rightserve = new Relay(7);
 		System.out.println("RobotInit() completed.\n");
 	}
 
@@ -171,9 +173,6 @@ public class FRC_UserProgram extends IterativeRobot {
 		m_dsPacketsReceivedInCurrentSecond = 0;	// Reset the number of dsPackets in current second
 		m_driveMode = UNINITIALIZED_DRIVE;		// Set drive mode to uninitialized
 		ClearSolenoidLEDsKITT();
-                TESTNYA = new Victor(5);
-                Relay leftserve = new Relay(6);
-                rightserve = new Relay(7);
 	}
 
 	/********************************** Periodic Routines *************************************/
