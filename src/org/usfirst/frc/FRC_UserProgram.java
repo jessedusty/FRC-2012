@@ -7,7 +7,7 @@
 
 package org.usfirst.frc;
 
-
+import java.io.*;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
@@ -16,6 +16,10 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Watchdog;
 import edu.wpi.first.wpilibj.Victor;
 import edu.wpi.first.wpilibj.Relay;
+import edu.wpi.first.wpilibj.Servo;
+
+
+
 /**
  * This "BuiltinDefaultCode" provides the "default code" functionality as used in the "Benchtop Test."
  *
@@ -97,9 +101,14 @@ public class FRC_UserProgram extends IterativeRobot {
 	int m_disabledPeriodicLoops;
 	int m_telePeriodicLoops;
         
-        Victor TESTNYA;
+       Victor TESTNYA;
        Relay leftserve;
        Relay rightserve;
+       Servo cameraX;
+       Servo cameraY;
+       //current camera settings (original)
+       double currentX=.5;
+       double currentY=.5;
         
 
     /**
@@ -152,9 +161,12 @@ public class FRC_UserProgram extends IterativeRobot {
 		// Actions which would be performed once (and only once) upon initialization of the
 		// robot would be put here.
                 TESTNYA = new Victor(5);
-                leftserve = new Relay(6);
-                rightserve = new Relay(7);
+                leftserve = new Relay(1);
+                rightserve = new Relay(2);
+                cameraX = new Servo(9);
+                cameraY = new Servo (10);
 		System.out.println("RobotInit() completed.\n");
+                
 	}
 
 	public void disabledInit() {
@@ -190,7 +202,6 @@ public class FRC_UserProgram extends IterativeRobot {
 		// while disabled, printout the duration of current disabled mode in seconds
 		if ((Timer.getUsClock() / 1000000.0) > printSec) {
 			System.out.println("Disabled seconds: " + (printSec - startSec));
-                        System.out.println("I'm disabled.");
 			printSec++;
 		}
 	}
@@ -222,49 +233,163 @@ public class FRC_UserProgram extends IterativeRobot {
 		}
 		*/
 	}
-        void checkthebelt() {
-            if (m_rightStick.getRawButton(4) == true) {
+        
+        
+        //camera code
+        void checkServo()
+        {
+            double x=m_leftStick.getX();
+            double y=m_leftStick.getY();
+          
+            cameraX.set(currentX);
+            cameraY.set(currentY);
+            if (m_leftStick.getRawButton(11) == true)
+            {
+                currentX=0.0;
+                currentY=0.25;
+                cameraX.set(currentX);
+                cameraY.set(currentY);
+            }
+            else if (m_leftStick.getRawButton(10) == true)
+            {
+                currentX=1.0;
+                currentY=.15;
+                cameraX.set(currentX);
+                cameraY.set(currentY);
+            }
+            if (x>0.25)
+            {
+                currentX+=0.025;
+                if(currentX>1) currentX=1;
+            }
+            else if (x<-0.25)
+            {
+                currentX-=0.025;
+                if(currentX<0) currentX=0;
+            }
+            if (y>.25)
+            {
+                currentY+=0.025;
+                if(currentY>1) currentY=1;
+            }
+            else if (y<-0.25)
+            {
+                currentY-=0.025;
+                if(currentY<0) currentY=0;
+            }
+         
+        }
+        //Belt code
+        void checkBelt() {
+            if (m_leftStick.getRawButton(4) == true) {
                    TESTNYA.set(1.0);
-               } else if (m_rightStick.getRawButton(5) == true) { 
+               } else if (m_leftStick.getRawButton(5) == true) { 
                    TESTNYA.set(-1.0);
                } else {
                    TESTNYA.set(0.0);
                }
-        }
+            if (m_leftStick.getRawButton(6)==true)
+            {
+               TESTNYA.set(1.0);
+               Timer.delay(8);
+               TESTNYA.set(0.0);
+            }
         
-       
-       
-        void checkservo () {
-           
-           if (m_leftStick.getRawButton(3)) { 
-               
-               leftserve.set(Relay.Value.kForward);
-              
-           } else if (m_leftStick.getRawButton(2)) {
+        }
+       //Relay Code
+        void checkRelay ()
+        {
+            final double TIME_FWD_DOOR=0.225; //time relay is on while door moves down
+            final double TIME_REV_DOOR=0.3;  //time relay is on while door moves up
+            final double TIME_FWD_BRIDGE=0.00; //time relay is on while arm moves down
+            final double TIME_REV_BRIDGE=0.00;  //time relay is on while arm moves up                               //
+            final double TIME_DELAY=0.2; //time alloted between presses to prevent double command
+            
+            //temp test
+            
+                
+            
+        //Checks Z wheel, if up select step-up code. 
+         //If down stays on while pressed 
+        if (m_leftStick.getZ() <= 0) {
+          //Begining of set time rotation
+            //LEFT SERVO CODE (back door)
+            if (m_leftStick.getRawButton(1) == true)
+            {
+                leftserve.set(Relay.Value.kForward);
+                Timer.delay(TIME_FWD_DOOR);
+                leftserve.set(Relay.Value.kOff);
+                Timer.delay(TIME_DELAY);
+            }
+            else if (m_leftStick.getRawButton(3) == true)
+            {
                 leftserve.set(Relay.Value.kReverse);
-             
-           } else if (m_leftStick.getRawButton(6)) {
-              leftserve.set(Relay.Value.kOff);
-           }
-           
-           
-           if (m_leftStick.getRawButton(3)) { 
-               
+                Timer.delay(TIME_REV_DOOR);
+                leftserve.set(Relay.Value.kOff);
+                Timer.delay(TIME_DELAY);
+                 }
+            //RIGHT SERVO CODE (bridge lowering system)
+           if (m_rightStick.getRawButton(3) == true) 
+           {
                rightserve.set(Relay.Value.kForward);
-              
-           } else if (m_leftStick.getRawButton(2)) {
-                rightserve.set(Relay.Value.kReverse);
-             
-           } else if (m_leftStick.getRawButton(6)) {
-              rightserve.set(Relay.Value.kOff);
+               Timer.delay(TIME_FWD_BRIDGE);
+               rightserve.set(Relay.Value.kOff);
+               Timer.delay(TIME_DELAY);
+           } 
+           else if (m_rightStick.getRawButton(2) == true) 
+           {
+               rightserve.set(Relay.Value.kReverse);
+               Timer.delay(TIME_REV_BRIDGE);
+               rightserve.set(Relay.Value.kOff);
+               Timer.delay(TIME_DELAY);
            }
-           
-
-       }
+           //End of set time rotation
+        }
+        else{
+            //Start of on-while-pressed code
+             //  if (x==1){System.out.println("on-while-pressed code selected");x++;}
+             //LEFT SERVO CODE (back door)
+               //Checks control buttons, if false, turns off motor. 
+            
+            
+            if (m_leftStick.getRawButton(2))
+            {
+                leftserve.set(Relay.Value.kForward);
+            }
+            
+            else if (m_leftStick.getRawButton(3)) 
+            {
+               leftserve.set(Relay.Value.kReverse);
+            }
+            else
+            {
+                leftserve.set(Relay.Value.kOff);
+            }
+            
+        //RIGHT SERVO CODE (bridge lowering system)
+            //Checks control buttons, if false, turns off motor. 
+           if (m_rightStick.getRawButton(2))
+            {
+                rightserve.set(Relay.Value.kForward);
+            }
+            
+            else if (m_rightStick.getRawButton(3)) 
+            {
+               rightserve.set(Relay.Value.kReverse);
+            }
+            else
+            {
+                rightserve.set(Relay.Value.kOff);
+            }
+           //End of on-while-pressed rotation
+           }
+          //End of relay method   
+        }
 	   public void teleopPeriodic() {
                
-               checkthebelt(); 
-               checkservo();            
+               checkBelt(); 
+               checkServo();
+               checkRelay();
                
         // feed the user watchdog at every period when in autonomous
         Watchdog.getInstance().feed();
