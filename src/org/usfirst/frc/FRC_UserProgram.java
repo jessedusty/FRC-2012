@@ -7,17 +7,8 @@
 
 package org.usfirst.frc;
 
+import edu.wpi.first.wpilibj.*;
 import java.io.*;
-import edu.wpi.first.wpilibj.IterativeRobot;
-import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.RobotDrive;
-import edu.wpi.first.wpilibj.Solenoid;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.Watchdog;
-import edu.wpi.first.wpilibj.Victor;
-import edu.wpi.first.wpilibj.Relay;
-import edu.wpi.first.wpilibj.Servo;
-
 
 
 /**
@@ -109,8 +100,11 @@ public class FRC_UserProgram extends IterativeRobot {
        //current camera settings (original)
        double currentX=.5;
        double currentY=.5;
+       
+       KinectStick leftArm;
+       KinectStick rightArm;
         
-
+       
     /**
      * Constructor for this "BuiltinDefaultCode" Class.
      *
@@ -165,6 +159,11 @@ public class FRC_UserProgram extends IterativeRobot {
                 rightserve = new Relay(2);
                 cameraX = new Servo(9);
                 cameraY = new Servo (10);
+                
+                leftArm = new KinectStick(1);
+                rightArm = new KinectStick(2);
+        
+        
 		System.out.println("RobotInit() completed.\n");
                 
 	}
@@ -205,7 +204,21 @@ public class FRC_UserProgram extends IterativeRobot {
 			printSec++;
 		}
 	}
+        
 
+//public void autonomous() {
+//        while(isEnabled()){
+//            System.out.println("kinect heartbeat");
+//       
+//            m_robotDrive.tankDrive(leftArm.getY()* SLOWDOWNFOR_KINECT, rightArm.getY()* SLOWDOWNFOR_KINECT);
+//
+//            /*Example illustrating that accessing buttons is identical to a Joystick */
+//            //exampleButton = leftArm.getRawButton(1);
+//
+//            Timer.delay(.01); /* Delay 10ms to reduce processing load */
+//        }
+//    }
+static final float SLOWDOWNFOR_KINECT = 1;
 	public void autonomousPeriodic() {
             System.out.println("autonomous");
 		// feed the user watchdog at every period when in autonomous
@@ -216,24 +229,35 @@ public class FRC_UserProgram extends IterativeRobot {
 
 		// generate KITT-style LED display on the solenoids
 		SolenoidLEDsKITT( m_autoPeriodicLoops );
+                
+                      //  while(isEnabled()){
+            System.out.println("kinect heartbeat");
+       
+            m_robotDrive.tankDrive(leftArm.getY()* SLOWDOWNFOR_KINECT, rightArm.getY()* SLOWDOWNFOR_KINECT);
+
+            /*Example illustrating that accessing buttons is identical to a Joystick */
+            //exampleButton = leftArm.getRawButton(1);
+
+          //  Timer.delay(.01); /* Delay 10ms to reduce processing load */
+        //}
 
 		/* the below code (if uncommented) would drive the robot forward at half speed
-		 * for two seconds.  This code is provided as an example of how to drive the
-		 * robot in autonomous mode, but is not enabled in the default code in order
-		 * to prevent an unsuspecting team from having their robot drive autonomously!
-		* /
-		/* below code commented out for safety
-		if (m_autoPeriodicLoops == 1) {
-			// When on the first periodic loop in autonomous mode, start driving forwards at half speed
-			m_robotDrive->Drive(0.5, 0.0);			// drive forwards at half speed
-		}
-		if (m_autoPeriodicLoops == (2 * GetLoopsPerSec())) {
-			// After 2 seconds, stop the robot
-			m_robotDrive->Drive(0.0, 0.0);			// stop robot
-		}
-		*/
+/		 * for two seconds.  This code is provided as an example of how to drive the
+//		 * robot in autonomous mode, but is not enabled in the default code in order
+//		 * to prevent an unsuspecting team from having their robot drive autonomously!
+//		* /
+//		/* below code commented out for safety
+//		if (m_autoPeriodicLoops == 1) {
+//			// When on the first periodic loop in autonomous mode, start driving forwards at half speed
+//			m_robotDrive->Drive(0.5, 0.0);			// drive forwards at half speed
+//		}
+//		if (m_autoPeriodicLoops == (2 * GetLoopsPerSec())) {
+//			// After 2 seconds, stop the robot
+//			m_robotDrive->Drive(0.0, 0.0);			// stop robot
+//		}
+//		*/
 	}
-        
+//       
         
         //camera code
         void checkServo()
