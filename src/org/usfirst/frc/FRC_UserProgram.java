@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.Watchdog;
 import edu.wpi.first.wpilibj.Victor;
 import edu.wpi.first.wpilibj.Relay;
 import edu.wpi.first.wpilibj.Servo;
+import edu.wpi.first.wpilibj.KinectStick;
 
 
 
@@ -101,14 +102,17 @@ public class FRC_UserProgram extends IterativeRobot {
 	int m_disabledPeriodicLoops;
 	int m_telePeriodicLoops;
         
-       Victor TESTNYA;
-       Relay leftserve;
-       Relay rightserve;
+       Victor frontArm;
+       Relay backDoor;
+       Relay belt;
        Servo cameraX;
        Servo cameraY;
+       KinectStick leftArm;
+       KinectStick rightArm;
        //current camera settings (original)
        double currentX=.5;
        double currentY=.5;
+       boolean doorState=false;
         
 
     /**
@@ -160,11 +164,13 @@ public class FRC_UserProgram extends IterativeRobot {
 	public void robotInit() {
 		// Actions which would be performed once (and only once) upon initialization of the
 		// robot would be put here.
-                TESTNYA = new Victor(5);
-                leftserve = new Relay(1);
-                rightserve = new Relay(2);
+                frontArm = new Victor(5);
+                backDoor = new Relay(1);
+                belt = new Relay(2);
                 cameraX = new Servo(9);
                 cameraY = new Servo (10);
+                rightArm = new KinectStick(1);
+                rightArm = new KinectStick(2);
 		System.out.println("RobotInit() completed.\n");
                 
 	}
@@ -206,11 +212,12 @@ public class FRC_UserProgram extends IterativeRobot {
 		}
 	}
 
-	public void autonomousPeriodic() {
+	static final float SLOWDOWNFOR_KINECT = 1;
+        public void autonomousPeriodic() {
             System.out.println("autonomous");
 		// feed the user watchdog at every period when in autonomous
 		Watchdog.getInstance().feed();
-                
+                 m_robotDrive.tankDrive(leftArm.getY()* SLOWDOWNFOR_KINECT, rightArm.getY()* SLOWDOWNFOR_KINECT);
                 
 		m_autoPeriodicLoops++;
 
@@ -236,7 +243,7 @@ public class FRC_UserProgram extends IterativeRobot {
         
         
         //camera code
-        void checkServo()
+        void cameraServo()
         {
             double x=m_leftStick.getX();
             double y=m_leftStick.getY();
@@ -259,137 +266,119 @@ public class FRC_UserProgram extends IterativeRobot {
             }
             if (x>0.25)
             {
-                currentX+=0.025;
+                currentX+=0.01;
                 if(currentX>1) currentX=1;
             }
             else if (x<-0.25)
             {
-                currentX-=0.025;
+                currentX-=0.01;
                 if(currentX<0) currentX=0;
             }
             if (y>.25)
             {
-                currentY+=0.025;
+                currentY+=0.01;
                 if(currentY>1) currentY=1;
             }
             else if (y<-0.25)
             {
-                currentY-=0.025;
+                currentY-=0.01;
                 if(currentY<0) currentY=0;
             }
          
         }
         //Belt code
-        void checkBelt() {
-            if (m_leftStick.getRawButton(4) == true) {
-                   TESTNYA.set(1.0);
-               } else if (m_leftStick.getRawButton(5) == true) { 
-                   TESTNYA.set(-1.0);
-               } else {
-                   TESTNYA.set(0.0);
-               }
-            if (m_leftStick.getRawButton(6)==true)
-            {
-               TESTNYA.set(1.0);
-               Timer.delay(8);
-               TESTNYA.set(0.0);
-            }
-        
-        }
-       //Relay Code
-        void checkRelay ()
+        void belt() 
         {
-            final double TIME_FWD_DOOR=0.225; //time relay is on while door moves down
-            final double TIME_REV_DOOR=0.3;  //time relay is on while door moves up
-            final double TIME_FWD_BRIDGE=0.00; //time relay is on while arm moves down
-            final double TIME_REV_BRIDGE=0.00;  //time relay is on while arm moves up                               //
+           if (m_leftStick.getRawButton(5))
+            {
+                belt.set(Relay.Value.kForward);
+            }
+            
+            else if (m_leftStick.getRawButton(4)) 
+            {
+               belt.set(Relay.Value.kReverse);
+            }
+            else
+            {
+                belt.set(Relay.Value.kOff);
+            }
+        }
+        
+       //Relay Code
+        void frontArm ()
+        {
+            if (m_rightStick.getRawButton(4) == true) {
+System.out.println("TEST");
+                   frontArm.set(1.0);
+               } else if (m_leftStick.getRawButton(5) == true) { 
+                   frontArm.set(-1.0);
+               } else {
+                   frontArm.set(0.0);
+               }
+/*          if (m_rightStick.getRawButton(11)==true)
+            {
+               frontArm.set(1.0);
+               Timer.delay(8);
+               frontArm.set(0.0);
+            }
+*/            
+        }
+        void backDoor ()
+        {
+            final double TIME_FWD_DOOR=0.2; //time relay is on while door moves down
+            final double TIME_REV_DOOR=0.3;  //time relay is on while door moves up                                         //
             final double TIME_DELAY=0.2; //time alloted between presses to prevent double command
-            
-            //temp test
-            
-                
-            
+    
         //Checks Z wheel, if up select step-up code. 
          //If down stays on while pressed 
-        if (m_leftStick.getZ() <= 0) {
-          //Begining of set time rotation
-            //LEFT SERVO CODE (back door)
-            if (m_leftStick.getRawButton(1) == true)
+        if (m_leftStick.getZ() <= 0) 
+        {
+          //Begining of set-time rotation
+            
+            if (m_leftStick.getRawButton(1) == true && doorState==false)
             {
-                leftserve.set(Relay.Value.kForward);
+                backDoor.set(Relay.Value.kForward);
                 Timer.delay(TIME_FWD_DOOR);
-                leftserve.set(Relay.Value.kOff);
+                backDoor.set(Relay.Value.kOff);
                 Timer.delay(TIME_DELAY);
+                doorState=true;
             }
-            else if (m_leftStick.getRawButton(3) == true)
+            else if (m_leftStick.getRawButton(1) == true&&doorState==true)
             {
-                leftserve.set(Relay.Value.kReverse);
+                backDoor.set(Relay.Value.kReverse);
                 Timer.delay(TIME_REV_DOOR);
-                leftserve.set(Relay.Value.kOff);
+                backDoor.set(Relay.Value.kOff);
                 Timer.delay(TIME_DELAY);
-                 }
-            //RIGHT SERVO CODE (bridge lowering system)
-           if (m_rightStick.getRawButton(3) == true) 
-           {
-               rightserve.set(Relay.Value.kForward);
-               Timer.delay(TIME_FWD_BRIDGE);
-               rightserve.set(Relay.Value.kOff);
-               Timer.delay(TIME_DELAY);
-           } 
-           else if (m_rightStick.getRawButton(2) == true) 
-           {
-               rightserve.set(Relay.Value.kReverse);
-               Timer.delay(TIME_REV_BRIDGE);
-               rightserve.set(Relay.Value.kOff);
-               Timer.delay(TIME_DELAY);
-           }
-           //End of set time rotation
+                doorState=false;
+             }
+            //end of set-time rotation
         }
         else{
             //Start of on-while-pressed code
-             //  if (x==1){System.out.println("on-while-pressed code selected");x++;}
-             //LEFT SERVO CODE (back door)
-               //Checks control buttons, if false, turns off motor. 
-            
-            
             if (m_leftStick.getRawButton(2))
             {
-                leftserve.set(Relay.Value.kForward);
+                backDoor.set(Relay.Value.kForward);
             }
             
             else if (m_leftStick.getRawButton(3)) 
             {
-               leftserve.set(Relay.Value.kReverse);
+               backDoor.set(Relay.Value.kReverse);
             }
             else
             {
-                leftserve.set(Relay.Value.kOff);
+                backDoor.set(Relay.Value.kOff);
             }
-            
-        //RIGHT SERVO CODE (bridge lowering system)
-            //Checks control buttons, if false, turns off motor. 
-           if (m_rightStick.getRawButton(2))
-            {
-                rightserve.set(Relay.Value.kForward);
-            }
-            
-            else if (m_rightStick.getRawButton(3)) 
-            {
-               rightserve.set(Relay.Value.kReverse);
-            }
-            else
-            {
-                rightserve.set(Relay.Value.kOff);
-            }
+        
            //End of on-while-pressed rotation
            }
-          //End of relay method   
+          //End of backDoor method   
         }
 	   public void teleopPeriodic() {
                
-               checkBelt(); 
-               checkServo();
-               checkRelay();
+               belt(); 
+               cameraServo();
+               frontArm();
+               backDoor();
                
         // feed the user watchdog at every period when in autonomous
         Watchdog.getInstance().feed();
@@ -416,9 +405,7 @@ public class FRC_UserProgram extends IterativeRobot {
             secondGroup[i] = m_solenoids[i + 4];
         }
         
-        //TESTNYA = new Victor(5);
-        //TESTNYA.set(0.5);
-
+      
         DemonstrateJoystickButtons(m_rightStick, m_rightStickButtonState, "Right Stick", firstGroup);
         DemonstrateJoystickButtons(m_leftStick, m_leftStickButtonState, "Left Stick ", secondGroup);
 
